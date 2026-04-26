@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Tahra</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%,   #4a1040 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 15% 70%,  #2e0830 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 80%,  #3a0a35 0%, transparent 60%),
+    #1a0520;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-family: 'Jost', sans-serif;
+  overflow-x: hidden;
+}
+body::after {
+  content:''; position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-size:200px; pointer-events:none; opacity:0.6; z-index:0;
+}
+
+/* ambient petals */
+.petals { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+.petal  { position:absolute; border-radius:60% 10% 60% 10%; opacity:0; animation:petalFall linear infinite; }
+@keyframes petalFall {
+  0%  { transform:translateY(-10px) rotate(0deg); opacity:0; }
+  8%  { opacity:0.5; }
+  90% { opacity:0.2; }
+  100%{ transform:translateY(105vh) rotate(500deg); opacity:0; }
+}
+.dots { position:fixed; inset:0; pointer-events:none; z-index:1; }
+.dot  { position:absolute; border-radius:50%; background:rgba(255,180,200,0.45); animation:dotPulse ease-in-out infinite; }
+@keyframes dotPulse {
+  0%,100%{ opacity:0.2; transform:scale(1); }
+  50%    { opacity:0.7; transform:scale(1.4); }
+}
+
+/* canvas overlay for explosion */
+#boom-canvas {
+  position:fixed; inset:0; pointer-events:none; z-index:9000;
+  width:100%; height:100%;
+}
+
+/* screens */
+.screen { display:none; position:relative; z-index:2; width:92%; max-width:420px; margin:3rem auto 4rem; }
+.screen.active { display:block; }
+
+/* question card */
+.q-card {
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,160,190,0.18);
+  border-radius:20px; padding:3rem 2.25rem;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  box-shadow:0 0 60px rgba(180,20,80,0.12),0 0 120px rgba(120,0,60,0.08),inset 0 1px 0 rgba(255,180,210,0.1);
+  text-align:center;
+  animation:cardIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+@keyframes cardIn {
+  from{ opacity:0; transform:translateY(20px); }
+  to  { opacity:1; transform:translateY(0); }
+}
+.q-emoji {
+  font-size:3.5rem; display:block; margin-bottom:1.5rem;
+  animation:roseFloat 4s ease-in-out infinite;
+  filter:drop-shadow(0 6px 18px rgba(200,30,60,0.4));
+}
+@keyframes roseFloat {
+  0%,100%{ transform:translateY(0) rotate(-2deg); }
+  50%    { transform:translateY(-8px) rotate(2deg); }
+}
+.q-eyebrow { font-size:0.62rem; font-weight:300; letter-spacing:0.26em; text-transform:uppercase; color:rgba(255,160,185,0.5); margin-bottom:1rem; }
+.q-title   { font-family:'Playfair Display',serif; font-style:italic; font-weight:300; font-size:1.75rem; color:#f9afc8; line-height:1.4; text-shadow:0 0 40px rgba(249,140,180,0.3); margin-bottom:0.5rem; }
+.q-title strong { font-style:normal; font-weight:400; color:#fff0f4; }
+.q-sub     { font-size:0.78rem; font-weight:200; color:rgba(255,200,215,0.45); letter-spacing:0.06em; margin-bottom:2.5rem; font-style:italic; font-family:'Playfair Display',serif; }
+
+.btn-row   { display:flex; flex-direction:row; gap:14px; justify-content:center; align-items:center; }
+.btn       { padding:0.75rem 2rem; border-radius:50px; font-family:'Jost',sans-serif; font-size:0.9rem; font-weight:300; letter-spacing:0.1em; cursor:pointer; border:none; outline:none; flex-shrink:0; }
+.btn-yes   { background:linear-gradient(135deg,#e03060,#c01040); color:#fff; box-shadow:0 4px 20px rgba(200,10,50,0.4); transition:transform 0.15s,box-shadow 0.15s; }
+.btn-yes:hover  { transform:scale(1.06); box-shadow:0 6px 28px rgba(200,10,50,0.55); }
+.btn-yes:active { transform:scale(0.97); }
+.btn-no    { background:rgba(255,255,255,0.07); color:rgba(255,180,200,0.7); border:1px solid rgba(255,150,180,0.2)!important; }
+
+/* love card */
+.love-card {
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,160,190,0.18);
+  border-radius:20px; padding:3rem 2.25rem 3.5rem;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  box-shadow:0 0 60px rgba(180,20,80,0.12),0 0 120px rgba(120,0,60,0.08),inset 0 1px 0 rgba(255,180,210,0.1);
+  opacity:0; animation:cardIn 1s cubic-bezier(0.16,1,0.3,1) forwards 0.1s;
+}
+.to-label  { text-align:center; font-size:0.65rem; font-weight:300; letter-spacing:0.28em; text-transform:uppercase; color:rgba(255,160,185,0.55); margin-bottom:0.9rem; opacity:0; animation:fadeUp 0.8s ease forwards 0.4s; }
+.name      { font-family:'Playfair Display',serif; font-style:italic; font-weight:300; font-size:clamp(3.8rem,16vw,5rem); color:#f9afc8; text-align:center; line-height:1; letter-spacing:-0.01em; text-shadow:0 0 50px rgba(249,140,180,0.35),0 0 100px rgba(200,60,120,0.15); opacity:0; animation:fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) forwards 0.55s; }
+.hearts-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin:1.6rem 0; opacity:0; animation:fadeUp 0.8s ease forwards 0.75s; }
+.h-line    { flex:1; height:1px; background:linear-gradient(to right,transparent,rgba(240,120,160,0.35)); }
+.h-line.r  { background:linear-gradient(to left,transparent,rgba(240,120,160,0.35)); }
+.hrt       { color:#e05878; font-size:1rem; display:inline-block; animation:hBeat 1.7s ease-in-out infinite; }
+.hrt:nth-child(3){ font-size:0.7rem; color:#c03058; animation-delay:0.2s; }
+.hrt:nth-child(5){ animation-delay:0.4s; }
+@keyframes hBeat {
+  0%,100%{ transform:scale(1); }
+  15%{ transform:scale(1.35); } 30%{ transform:scale(1); }
+  45%{ transform:scale(1.18); } 60%{ transform:scale(1); }
+}
+.message   { text-align:center; font-family:'Playfair Display',serif; font-style:italic; font-weight:300; font-size:1.15rem; line-height:2; color:rgba(255,230,238,0.88); margin-bottom:2rem; opacity:0; animation:fadeUp 0.8s ease forwards 0.9s; }
+.message strong { font-style:normal; font-weight:400; color:#f9afc8; }
+.thin-rule { width:50px; height:1px; background:rgba(240,120,160,0.3); margin:0 auto 2rem; opacity:0; animation:fadeUp 0.8s ease forwards 1s; }
+.poem      { font-family:'Jost',sans-serif; font-weight:200; font-size:0.95rem; line-height:2.1; color:rgba(255,210,225,0.7); text-align:center; letter-spacing:0.03em; margin-bottom:2.5rem; opacity:0; animation:fadeUp 0.8s ease forwards 1.1s; }
+.poem em   { color:#f2a0be; font-style:italic; font-family:'Playfair Display',serif; }
+.rose-wrap { text-align:center; margin:0.5rem 0 2.5rem; opacity:0; animation:fadeUp 0.8s ease forwards 1.25s; }
+.rose      { font-size:3.5rem; display:inline-block; animation:roseFloat 4s ease-in-out infinite; filter:drop-shadow(0 6px 18px rgba(200,30,60,0.4)); }
+.signature { text-align:center; opacity:0; animation:fadeUp 0.8s ease forwards 1.4s; }
+.sig-eyebrow{ font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,160,185,0.4); margin-bottom:0.45rem; font-weight:300; }
+.sig-main  { font-family:'Playfair Display',serif; font-style:italic; font-weight:300; font-size:1.4rem; color:rgba(255,220,232,0.85); }
+@keyframes fadeUp {
+  from{ opacity:0; transform:translateY(12px); }
+  to  { opacity:1; transform:translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="petals" id="petals"></div>
+<div class="dots" id="dots"></div>
+<canvas id="boom-canvas"></canvas>
+
+<!-- SCREEN 1 -->
+<div class="screen active" id="screen-q">
+  <div class="q-card">
+    <span class="q-emoji">🌹</span>
+    <p class="q-eyebrow">an important question</p>
+    <h2 class="q-title">Do you love<br><strong>Shehab?</strong></h2>
+    <p class="q-sub">think carefully before you answer...</p>
+    <div class="btn-row">
+      <button class="btn btn-yes" id="btn-yes" onclick="handleYes()">Yes</button>
+      <button class="btn btn-no"  id="btn-no"  onclick="handleNo()">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen-love">
+  <div class="love-card">
+    <p class="to-label">to the one I love</p>
+    <h1 class="name">Tahra</h1>
+    <div class="hearts-row">
+      <div class="h-line"></div>
+      <span class="hrt">♥</span><span class="hrt">♥</span><span class="hrt">♥</span>
+      <div class="h-line r"></div>
+    </div>
+    <p class="message">
+      I love you <strong>so, so, so</strong> much.<br>
+      With every single part of me.
+    </p>
+    <div class="thin-rule"></div>
+
+    <div class="rose-wrap"><span class="rose">🌹</span></div>
+    <div class="signature">
+      <p class="sig-main">you're the most beautiful girl in the world ♥</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── ambient petals ── */
+const petalLayer = document.getElementById('petals');
+['#c8204a','#e03060','#ff5580','#a01030','#ff8099'].forEach(color => {
+  for (let j=0;j<4;j++){
+    const p=document.createElement('div'); p.className='petal';
+    const sz=5+Math.random()*5;
+    Object.assign(p.style,{left:(Math.random()*108-4)+'vw',width:sz+'px',height:(sz*1.5)+'px',
+      background:color,animationDuration:(7+Math.random()*9)+'s',
+      animationDelay:(Math.random()*12)+'s',transform:`rotate(${Math.random()*360}deg)`,opacity:'0'});
+    petalLayer.appendChild(p);
+  }
+});
+const dotLayer=document.getElementById('dots');
+[[18,22],[72,15],[88,40],[10,65],[55,80],[82,72],[35,50],[60,30],[25,85]].forEach(([x,y])=>{
+  const d=document.createElement('div'); d.className='dot';
+  const sz=3+Math.random()*3;
+  Object.assign(d.style,{left:x+'%',top:y+'%',width:sz+'px',height:sz+'px',
+    animationDuration:(2.5+Math.random()*2.5)+'s',animationDelay:(Math.random()*3)+'s'});
+  dotLayer.appendChild(d);
+});
+
+/* ── NO runs away ── */
+let noCount=0;
+const noLabels=['No','Nope','Really??','Are you sure?','Please...','LAST CHANCE','Wrong answer!'];
+function handleNo(){
+  const btn=document.getElementById('btn-no');
+  noCount++;
+  btn.textContent=noLabels[Math.min(noCount,noLabels.length-1)];
+  if(noCount===1){
+    const r=btn.getBoundingClientRect();
+    Object.assign(btn.style,{position:'fixed',left:r.left+'px',top:r.top+'px',zIndex:'9999',margin:'0'});
+  }
+  requestAnimationFrame(()=>{
+    btn.style.transition='left 0.25s cubic-bezier(0.34,1.56,0.64,1),top 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+    const bw=btn.offsetWidth||100,bh=btn.offsetHeight||44;
+    btn.style.left=Math.max(10,Math.floor(Math.random()*(window.innerWidth-bw-10)))+'px';
+    btn.style.top =Math.max(10,Math.floor(Math.random()*(window.innerHeight-bh-10)))+'px';
+  });
+}
+
+/* ── Canvas explosion ── */
+const canvas = document.getElementById('boom-canvas');
+const ctx    = canvas.getContext('2d');
+let particles = [];
+let animId    = null;
+let exploding = false;
+
+function resizeCanvas(){
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+/* draw a clean heart shape */
+function drawHeart(ctx, x, y, size, color, alpha, rotation){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.scale(size/40, size/40);
+  ctx.beginPath();
+  ctx.moveTo(0, -10);
+  ctx.bezierCurveTo( 20, -30,  40,  -10,   0,  20);
+  ctx.bezierCurveTo(-40, -10, -20,  -30,   0, -10);
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur  = size * 0.4;
+  ctx.fill();
+  ctx.restore();
+}
+
+/* draw a butterfly */
+function drawButterfly(ctx, x, y, size, colTop, colBot, alpha, wingAngle, rotation){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+
+  const w = size;
+  const flap = Math.sin(wingAngle) * 0.35 + 0.65; // 0.3–1.0 wing spread
+
+  // right top wing
+  ctx.save();
+  ctx.scale(flap, 1);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(w*0.5, -w*0.5,  w*0.9, -w*0.15,  w*0.55, w*0.2);
+  ctx.bezierCurveTo(w*0.3,  w*0.35,  0.1,   w*0.1,   0,      0);
+  ctx.fillStyle = colTop;
+  ctx.shadowColor = colTop; ctx.shadowBlur = w*0.3;
+  ctx.fill();
+  // right bottom wing
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(w*0.55, w*0.2,  w*0.7,  w*0.6,  w*0.3,  w*0.55);
+  ctx.bezierCurveTo(w*0.1,  w*0.5,  0.05,   w*0.3,  0,      0);
+  ctx.fillStyle = colBot;
+  ctx.shadowColor = colBot; ctx.shadowBlur = w*0.2;
+  ctx.fill();
+  ctx.restore();
+
+  // left top wing (mirror)
+  ctx.save();
+  ctx.scale(-flap, 1);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(w*0.5, -w*0.5,  w*0.9, -w*0.15,  w*0.55, w*0.2);
+  ctx.bezierCurveTo(w*0.3,  w*0.35,  0.1,   w*0.1,   0,      0);
+  ctx.fillStyle = colTop; ctx.shadowColor = colTop; ctx.shadowBlur = w*0.3;
+  ctx.fill();
+  // left bottom wing
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(w*0.55, w*0.2,  w*0.7,  w*0.6,  w*0.3,  w*0.55);
+  ctx.bezierCurveTo(w*0.1,  w*0.5,  0.05,   w*0.3,  0,      0);
+  ctx.fillStyle = colBot; ctx.shadowColor = colBot; ctx.shadowBlur = w*0.2;
+  ctx.fill();
+  ctx.restore();
+
+  // body
+  ctx.beginPath();
+  ctx.ellipse(0, w*0.1, w*0.06, w*0.28, 0, 0, Math.PI*2);
+  ctx.fillStyle = '#200010';
+  ctx.shadowBlur = 0;
+  ctx.fill();
+
+  // antennae
+  ctx.strokeStyle = '#200010'; ctx.lineWidth = w*0.04;
+  ctx.beginPath(); ctx.moveTo(0,-w*0.18); ctx.quadraticCurveTo(-w*0.25,-w*0.55,-w*0.3,-w*0.6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-w*0.18); ctx.quadraticCurveTo( w*0.25,-w*0.55, w*0.3,-w*0.6); ctx.stroke();
+  ctx.fillStyle='#200010';
+  ctx.beginPath(); ctx.arc(-w*0.3,-w*0.6, w*0.05, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( w*0.3,-w*0.6, w*0.05, 0, Math.PI*2); ctx.fill();
+
+  ctx.restore();
+}
+
+const HEART_COLORS = ['#e03060','#f9afc8','#ff2255','#ff88aa','#ffffff','#c8102e','#ffaac8','#ff5580','#ffcce0'];
+const BUTTERFLY_PAIRS = [
+  ['#e03060','#f9afc8'],['#c8102e','#ffaac8'],['#ff5580','#ffd0e0'],
+  ['#a00030','#ff88aa'],['#d4006a','#ffbbdd'],['#ff2255','#ffe0ec']
+];
+
+function spawnParticles(){
+  const W = canvas.width, H = canvas.height;
+  particles = [];
+
+  // ── Hearts: rain from top ──
+  for(let i=0;i<80;i++){
+    const col = HEART_COLORS[Math.floor(Math.random()*HEART_COLORS.length)];
+    const size = 10 + Math.random()*28;          // 10–38px — small & cute
+    particles.push({
+      type: 'heart',
+      x: Math.random() * W,
+      y: -size - Math.random() * H * 0.6,         // start above screen
+      vy: 1.5 + Math.random() * 3.5,              // fall speed
+      vx: (Math.random()-0.5) * 1.5,              // gentle drift
+      size,
+      color: col,
+      rot: (Math.random()-0.5)*0.8,
+      rotV: (Math.random()-0.5)*0.06,
+      alpha: 0,
+      alphaV: 0.04 + Math.random()*0.03,
+      life: 1,
+      delay: Math.random() * 1.2,                 // staggered start
+      t: 0
+    });
+  }
+
+  // ── Butterflies: fly across ──
+  for(let i=0;i<14;i++){
+    const pair = BUTTERFLY_PAIRS[Math.floor(Math.random()*BUTTERFLY_PAIRS.length)];
+    const size = 28 + Math.random() * 45;         // 28–73px
+    const fromLeft = Math.random() > 0.5;
+    const startY = Math.random() * H;
+    const speed  = 1.8 + Math.random() * 2.8;
+    particles.push({
+      type: 'butterfly',
+      x: fromLeft ? -size*2 : W+size*2,
+      y: startY,
+      vx: fromLeft ? speed : -speed,
+      vy: (Math.random()-0.5)*1.2,
+      size,
+      colTop: pair[0], colBot: pair[1],
+      alpha: 0,
+      alphaV: 0.05,
+      wingsAngle: Math.random()*Math.PI*2,
+      wingsSpeed: 0.18 + Math.random()*0.15,
+      rot: fromLeft ? 0 : Math.PI,
+      life: 1,
+      delay: 0.3 + Math.random() * 1.5,
+      t: 0
+    });
+  }
+}
+
+function animateLoop(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let anyAlive = false;
+
+  for(const p of particles){
+    p.t += 1/60;
+    if(p.t < p.delay) { anyAlive=true; continue; }
+
+    const age = p.t - p.delay;
+
+    if(p.type === 'heart'){
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.rot += p.rotV;
+      // fade in quickly, stay, then fade out near bottom
+      if(p.alpha < 1) p.alpha = Math.min(1, p.alpha + p.alphaV);
+      const fadeStart = canvas.height * 0.75;
+      if(p.y > fadeStart) p.alpha = Math.max(0, p.alpha - 0.025);
+      if(p.y < canvas.height + p.size*2 && p.alpha > 0){
+        drawHeart(ctx, p.x, p.y, p.size, p.color, p.alpha, p.rot);
+        anyAlive = true;
+      }
+    }
+
+    if(p.type === 'butterfly'){
+      p.x += p.vx;
+      p.y += p.vy;
+      p.wingsAngle += p.wingsSpeed;
+      if(p.alpha < 0.92) p.alpha = Math.min(0.92, p.alpha + p.alphaV);
+      // fade out near edges
+      const edgeFade = 120;
+      const distEdge = Math.min(p.x, canvas.width-p.x, p.y+200, canvas.height-p.y+200);
+      if(distEdge < edgeFade) p.alpha = Math.max(0, p.alpha - 0.02);
+      const onScreen = p.x > -p.size*3 && p.x < canvas.width+p.size*3;
+      if(onScreen && p.alpha > 0){
+        drawButterfly(ctx, p.x, p.y, p.size, p.colTop, p.colBot, p.alpha, p.wingsAngle, p.rot);
+        anyAlive = true;
+      }
+    }
+  }
+
+  if(anyAlive){
+    animId = requestAnimationFrame(animateLoop);
+  } else {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    exploding = false;
+  }
+}
+
+/* ── YES handler ── */
+function handleYes(){
+  if(exploding) return;
+  exploding = true;
+  if(animId) cancelAnimationFrame(animId);
+  spawnParticles();
+  animId = requestAnimationFrame(animateLoop);
+
+  setTimeout(()=>{
+    document.getElementById('screen-q').classList.remove('active');
+    document.getElementById('screen-love').classList.add('active');
+    const nb=document.getElementById('btn-no');
+    if(nb) nb.style.display='none';
+    window.scrollTo(0,0);
+  }, 1100);
+}
+</script>
+</body>
+</html>
